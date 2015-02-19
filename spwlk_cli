@@ -1,23 +1,62 @@
 #!/usr/bin/perl
 use Term::ReadKey;
+use Getopt::Long;
 
-print "Username: ";
-$username = ReadLine 0;
+$version_number = "0.0.1";
+$version_name = "Thales";
 
-print "Enter your password: ";
-ReadMode 'noecho';
-$password = ReadLine 0;
-ReadMode 'normal';
+#Commandline options
+$list_all_servers = '';
+$help = '';
+$version = '';
 
-print "\n";
+#User input
+$username = '';
+$password = '';
+$server_url = '';
 
-print "Server URL: ";
-$username = ReadLine 0;
+GetOptions ('list-all-servers' => \$list_all_servers, 'help' => \$help, 'h' => \$help, 'u=s' => \$username, 'username=s' => \$username, 'v' => \$version, 'version' => \$version);
 
-print "\n";
+if ( $help ) {
 
-chomp $server;
-chomp $username;
-chomp $password;
+	print "Usage: spwlk_cli [options]\n\n";
+	print "OPTIONS\n\n";
+	print "\t-h --help\tshow this help message and exit\n";
+	print "\t-v --version\tshow version info and exit\n";
+	print "\n";
 
-print "Thanks unfortunately nothing more is implemented\n";
+} elsif ( $version ) {
+
+	print "spwlk_cli v" . $version_number . " " . $version_name . "\n";
+
+} else {
+
+	if ( $username eq "" ) {
+
+		print "Username: ";
+		$username = ReadLine 0;
+
+	} else {
+
+		print "Username: " . $username . "\n";
+
+	}
+
+	print "Enter your password: ";
+	ReadMode 'noecho';
+	$password = ReadLine 0;
+	ReadMode 'normal';
+
+	print "\n";
+
+	print "Server URL: ";
+	$server_url = ReadLine 0;
+
+	print "\n";
+
+	chomp $server_url;
+	chomp $username;
+	chomp $password;
+
+	print "Thanks unfortunately nothing more is implemented\n";
+}
