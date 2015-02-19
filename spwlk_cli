@@ -1,12 +1,13 @@
 #!/usr/bin/perl
 use Term::ReadKey;
 use Getopt::Long;
+use Frontier::Client;
 
-$version_number = "0.0.1";
+$version_number = "0.1.2";
 $version_name = "Thales";
 
 #Commandline options
-$list_all_servers = '';
+$list_servers = '';
 $help = '';
 $version = '';
 
@@ -15,14 +16,24 @@ $username = '';
 $password = '';
 $server_url = '';
 
-GetOptions ('list-all-servers' => \$list_all_servers, 'help' => \$help, 'h' => \$help, 'u=s' => \$username, 'username=s' => \$username, 'v' => \$version, 'version' => \$version);
+$coder = Frontier::RPC2->new;
+
+GetOptions (
+		'list-servers' => \$list_servers,
+		'help' => \$help, 'h' => \$help,
+		'u=s' => \$username, 'username=s' => \$username,
+		'v' => \$version, 'version' => \$version,
+		'url=s' => \$server_url
+);
 
 if ( $help ) {
 
 	print "Usage: spwlk_cli [options]\n\n";
 	print "OPTIONS\n\n";
-	print "\t-h --help\tshow this help message and exit\n";
-	print "\t-v --version\tshow version info and exit\n";
+	print "\t-h --help\tshow this help message\n";
+	print "\t-v --version\tshow version info\n\n";
+	print "\t--list-servers\tlist all servers the user have access to\n";
+	print "\t--url [Spacewalk server URL]\n";
 	print "\n";
 
 } elsif ( $version ) {
@@ -42,6 +53,17 @@ if ( $help ) {
 
 	}
 
+        if ( $server_url eq "" ) {
+
+                print "Server URL: ";
+                $server_url = ReadLine 0;
+
+        } else {
+
+                print "Server URL: " . $server_url . "\n";
+
+        }
+
 	print "Enter your password: ";
 	ReadMode 'noecho';
 	$password = ReadLine 0;
@@ -49,14 +71,31 @@ if ( $help ) {
 
 	print "\n";
 
-	print "Server URL: ";
-	$server_url = ReadLine 0;
-
-	print "\n";
-
 	chomp $server_url;
 	chomp $username;
 	chomp $password;
 
-	print "Thanks unfortunately nothing more is implemented\n";
+	$client = new Frontier::Client(url => "http://". $server_url. "/rpc/api");
+        $session = $client->call('auth.login',$username, $password);
+
+        if ( $list_servers ) {
+
+                $systems = $client->call('system.listSystems', $session);
+
+                foreach my $system ( @$systems ) {
+
+                        $date_time = $system->{'last_checkin'};
+                        $date_time_str = sprintf("%d-%02d-%02d %02d:%02d", unpack('A4A2A2xA2xA2xA2', $date_time->value()));
+
+                        print "ID: " . $system->{'id'} . " HOST: " . $system->{'name'} . " LastCheckedIn: " . $date_time_str . "\n";
+
+                }
+
+        } else {
+
+                print "You should try --list-all-servers it is the only feature implemented at the moment\n";
+
+        }
+
+        $client->call('auth.logout', $session);
 }
