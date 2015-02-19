@@ -39,6 +39,8 @@ if ( $help ) {
 } elsif ( $version ) {
 
 	print "spwlk_cli v" . $version_number . " " . $version_name . "\n";
+	print "(C) 2015 Lars Dennis Renneberg Andersen\n";
+	print "\@-Boy Software - http://software.at-boy.net/\n"
 
 } else {
 
