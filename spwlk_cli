@@ -3,7 +3,7 @@ use Term::ReadKey;
 use Getopt::Long;
 use Frontier::Client;
 
-$version_number = "0.1.3";
+$version_number = "0.1.4";
 $version_name = "Thales";
 
 #Commandline options
@@ -11,6 +11,7 @@ $list_servers = '';
 $help = '';
 $version = '';
 $list_inactive_servers = '';
+$list_servers_extra_pcks = '';
 
 #User input
 $username = '';
@@ -26,6 +27,7 @@ GetOptions (
 		'v' => \$version, 'version' => \$version,
 		'url=s' => \$server_url,
 		'list-inactive-servers' => \$list_inactive_servers,
+		'list-srv-extra-pcks' => \$list_servers_extra_pcks,
 );
 
 if ( $help ) {
@@ -36,8 +38,9 @@ if ( $help ) {
 	print "\t-v --version\tshow version info\n\n";
 	print "\t-u --username [username]\n";
 	print "\t--url [Spacewalk server URL]\n\n";
-	print "\t--list-servers\tlist all servers the user have access to\n";
-	print "\t--list-inactive-servers\tlist all inactive servers the user have access to\n";
+	print "\t--list-servers\t\t\tlist all servers\n";
+	print "\t--list-inactive-servers\t\tlist all inactive servers\n";
+	print "\t--list-srv-extra-pcks\t\tlist all servers that has packages not known by Spacewalk server\n";
 	
 	print "\n";
 
@@ -85,7 +88,15 @@ if ( $help ) {
 	$client = new Frontier::Client(url => "http://". $server_url. "/rpc/api");
         $session = $client->call('auth.login',$username, $password);
 
-        if ( $list_servers || $list_inactive_servers ) {
+	if ( $list_servers_extra_pcks  ) {
+
+		$systems = $client->call('system.listSystemsWithExtraPackages', $session);
+
+		foreach my $system ( @$systems ) {
+			print "ID: " . $system->{'id'} . " HOST: " . $system->{'name'} . " Extra pcks.: " . $system->{'extra_pkg_count'} . "\n";
+		}
+
+        } elsif ( $list_servers || $list_inactive_servers ) {
 
 		if ( $list_inactive_servers ) {
 			$systems = $client->call('system.listInactiveSystems', $session);
