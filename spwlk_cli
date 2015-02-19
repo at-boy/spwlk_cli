@@ -3,13 +3,14 @@ use Term::ReadKey;
 use Getopt::Long;
 use Frontier::Client;
 
-$version_number = "0.1.2";
+$version_number = "0.1.3";
 $version_name = "Thales";
 
 #Commandline options
 $list_servers = '';
 $help = '';
 $version = '';
+$list_inactive_servers = '';
 
 #User input
 $username = '';
@@ -23,7 +24,8 @@ GetOptions (
 		'help' => \$help, 'h' => \$help,
 		'u=s' => \$username, 'username=s' => \$username,
 		'v' => \$version, 'version' => \$version,
-		'url=s' => \$server_url
+		'url=s' => \$server_url,
+		'list-inactive-servers' => \$list_inactive_servers,
 );
 
 if ( $help ) {
@@ -32,8 +34,11 @@ if ( $help ) {
 	print "OPTIONS\n\n";
 	print "\t-h --help\tshow this help message\n";
 	print "\t-v --version\tshow version info\n\n";
+	print "\t-u --username [username]\n";
+	print "\t--url [Spacewalk server URL]\n\n";
 	print "\t--list-servers\tlist all servers the user have access to\n";
-	print "\t--url [Spacewalk server URL]\n";
+	print "\t--list-inactive-servers\tlist all inactive servers the user have access to\n";
+	
 	print "\n";
 
 } elsif ( $version ) {
@@ -80,16 +85,22 @@ if ( $help ) {
 	$client = new Frontier::Client(url => "http://". $server_url. "/rpc/api");
         $session = $client->call('auth.login',$username, $password);
 
-        if ( $list_servers ) {
+        if ( $list_servers || $list_inactive_servers ) {
 
-                $systems = $client->call('system.listSystems', $session);
+		if ( $list_inactive_servers ) {
+			$systems = $client->call('system.listInactiveSystems', $session);
+		} else {
 
-                foreach my $system ( @$systems ) {
+                	$systems = $client->call('system.listSystems', $session);
 
-                        $date_time = $system->{'last_checkin'};
-                        $date_time_str = sprintf("%d-%02d-%02d %02d:%02d", unpack('A4A2A2xA2xA2xA2', $date_time->value()));
+		}
 
-                        print "ID: " . $system->{'id'} . " HOST: " . $system->{'name'} . " LastCheckedIn: " . $date_time_str . "\n";
+	        foreach my $system ( @$systems ) {
+
+        		$date_time = $system->{'last_checkin'};
+                	$date_time_str = sprintf("%d-%02d-%02d %02d:%02d", unpack('A4A2A2xA2xA2xA2', $date_time->value()));
+
+	                print "ID: " . $system->{'id'} . " HOST: " . $system->{'name'} . " LastCheckedIn: " . $date_time_str . "\n";
 
                 }
 
