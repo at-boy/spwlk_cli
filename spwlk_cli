@@ -3,7 +3,7 @@ use Term::ReadKey;
 use Getopt::Long;
 use Frontier::Client;
 
-$version_number = "0.1.4";
+$version_number = "0.1.5";
 $version_name = "Thales";
 
 #Commandline options
@@ -12,6 +12,7 @@ $help = '';
 $version = '';
 $list_inactive_servers = '';
 $list_servers_extra_pcks = '';
+$list_out_of_date_servers = '';
 
 #User input
 $username = '';
@@ -28,6 +29,7 @@ GetOptions (
 		'url=s' => \$server_url,
 		'list-inactive-servers' => \$list_inactive_servers,
 		'list-srv-extra-pcks' => \$list_servers_extra_pcks,
+		'list-ood-servers' => \$list_out_of_date_servers
 );
 
 if ( $help ) {
@@ -41,6 +43,7 @@ if ( $help ) {
 	print "\t--list-servers\t\t\tlist all servers\n";
 	print "\t--list-inactive-servers\t\tlist all inactive servers\n";
 	print "\t--list-srv-extra-pcks\t\tlist all servers that has packages not known by Spacewalk server\n";
+	print "\t--list-ood-servers\t\tlist out of date servers (packages needs updating)\n";
 	
 	print "\n";
 
@@ -96,11 +99,16 @@ if ( $help ) {
 			print "ID: " . $system->{'id'} . " HOST: " . $system->{'name'} . " Extra pcks.: " . $system->{'extra_pkg_count'} . "\n";
 		}
 
-        } elsif ( $list_servers || $list_inactive_servers ) {
+        } elsif ( $list_servers || $list_inactive_servers || $list_out_of_date_servers ) {
 
 		if ( $list_inactive_servers ) {
 			$systems = $client->call('system.listInactiveSystems', $session);
-		} else {
+		} elsif ( $list_out_of_date_systems ) {
+
+			$systems = $client->call('listOutOfDateSystems', $session);
+
+		} 
+		else {
 
                 	$systems = $client->call('system.listSystems', $session);
 
